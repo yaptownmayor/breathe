@@ -89,3 +89,40 @@ app.post('/api/v1/register', (req, res) => {
         res.status(400).json({ message: error.message, status: 'Failed' });
     }
 });
+
+app.post('/api/v1/login', (req, res) => {
+    if (req.method === 'GET') {
+        return res.status(400).json({ message: 'Please use POST method' });
+    }
+
+    const { email, password } = req.body;
+
+    try {
+        if (!email || !password) {
+            throw new Error('Please provide all required fields!');
+        }
+        if (!validateEmail(email)) {
+            throw new Error('Please provide a valid email address.');
+        }
+
+        // Check if email exists in the database
+        const dbData = fs.readFileSync('db.yaml', 'utf8');
+        const dbEntries = dbData.split('\n');
+        for (const entry of dbEntries) {
+            if (entry) {
+                const userData = JSON.parse(entry);
+                if (userData.email === email) {
+                    if (userData.password === password) {
+                        return res.json({ message: 'User logged in successfully', status: 'Success' });
+                    } else {
+                        throw new Error('Invalid password! Please provide the correct password.');
+                    }
+                }
+            }
+        }
+
+        throw new Error('Email not found! Please provide a valid email address.');
+    } catch (error) {
+        res.status(400).json({ message: error.message, status: 'Failed' });
+    }
+});
